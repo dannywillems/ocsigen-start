@@ -151,11 +151,19 @@ val remove_email_from_user : userid:id -> email:string -> unit Lwt.t
 
 (** Returns whether for a user designated by its id the given email has been
     validated. *)
-val email_is_validated : userid:id -> email:string -> bool Lwt.t
+val is_email_validated : userid:id -> email:string -> bool Lwt.t
+
+(** [set_email_validated userid email] valids [email] for the user with id
+    [userid]. *)
+val set_email_validated : int64 -> string -> unit Lwt.t
 
 (** Returns whether an email is the  main email registered for a
     given user designated by its id. *)
 val is_main_email : userid:id -> email:string -> bool Lwt.t
+
+(** [add_email_to_user ~userid ~email] add [email] to user with ID [userid].
+  *)
+val add_email_to_user : userid:int64 -> email:string -> unit Lwt.t
 
 (** Sets the main email for a user with the id [userid] as the email [email]. *)
 val update_main_email : userid:id -> email:string -> unit Lwt.t

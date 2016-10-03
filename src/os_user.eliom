@@ -69,14 +69,6 @@ let%shared fullname_of_user user = String.concat " " [user.fn; user.ln]
 
 let%shared is_complete u = not (u.fn = "" || u.ln = "")
 
-let emails_of_user user = Os_db.User.emails_of_userid user.userid
-
-let email_of_user user = Os_db.User.email_of_userid user.userid
-
-
-include Os_db.User
-
-
 (* Using cache tools to prevent multiple same database queries
    during the request. *)
 module MCache = Os_request_cache.Make(
@@ -92,6 +84,66 @@ struct
     with Os_db.No_such_resource -> Lwt.fail No_such_user
 end)
 
+let userid_of_email email =
+  Os_db.User.userid_of_email email
+
+let is_registered email =
+  Os_db.User.is_registered email
+
+let is_preregistered email =
+  Os_db.User.is_preregistered email
+
+let is_email_validated ~userid ~email =
+  Os_db.User.is_email_validated userid email
+
+let set_email_validated userid email =
+  Os_db.User.set_email_validated userid email
+
+let add_actionlinkkey ?(autoconnect=false)
+    ?(action=`AccountActivation) ?(data="") ?(validity=1L)
+    ~act_key ~userid ~email () =
+  Os_db.User.add_actionlinkkey ~autoconnect ~action ~data ~validity ~act_key
+  ~userid ~email ()
+
+let add_preregister email =
+  Os_db.User.add_preregister email
+
+let remove_preregister email =
+  Os_db.User.remove_preregister email
+
+let all ?(limit=10L) () =
+  Os_db.User.all ~limit ()
+
+let update_main_email ~userid ~email =
+  Os_db.User.update_main_email ~userid ~email
+
+let verify_password ~email ~password =
+  Os_db.User.verify_password ~email ~password
+
+let get_actionlinkkey_info act_key =
+  Os_db.User.get_actionlinkkey_info act_key
+
+let email_of_userid userid =
+  Os_db.User.email_of_userid userid
+
+let email_of_user user =
+  email_of_userid (userid_of_user user)
+
+let emails_of_userid userid =
+  Os_db.User.emails_of_userid userid
+
+let emails_of_user user =
+  emails_of_userid (userid_of_user user)
+
+let add_email_to_user ~userid ~email =
+  Os_db.User.add_email_to_user ~userid ~email
+
+let remove_email_from_user ~userid ~email =
+  Os_db.User.remove_email_from_user ~userid ~email
+
+let is_main_email ~userid ~email =
+  Os_db.User.is_main_email ~email ~userid
+
 (* Overwrite the function [user_of_userid] of [Os_db.User] and use
    the [get] function of the cache module. *)
 let user_of_userid userid =
@@ -101,8 +153,6 @@ let user_of_userid userid =
 let password_set userid =
   let%lwt _, s = MCache.get userid in
   Lwt.return s
-
-
 
 
 (* -----------------------------------------------------------------
@@ -159,8 +209,4 @@ let get_users ?pattern () =
 
 let set_pwd_crypt_fun a = Os_db.pwd_crypt_ref := a
 
-let email_is_validated ~userid ~email =
-  Os_db.User.get_email_validated userid email
 
-let is_main_email ~userid ~email =
-  Os_db.User.is_main_email ~email ~userid

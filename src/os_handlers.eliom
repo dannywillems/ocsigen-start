@@ -137,7 +137,7 @@ let%server sign_up_handler () email =
   with Os_user.Already_exists userid ->
     (* If email is not validated, the user never logged in,
        I send an action link, as if it were a new user. *)
-    let%lwt validated = Os_db.User.get_email_validated userid email in
+    let%lwt validated = Os_user.is_email_validated userid email in
     if not validated
     then send_action_link email userid
     else begin
@@ -296,7 +296,7 @@ let action_link_handler_common akey =
     in
     let%lwt () =
       if action = `AccountActivation
-      then Os_db.User.set_email_validated userid email
+      then Os_user.set_email_validated userid email
       else Lwt.return_unit
     in
     if autoconnect && myid_o <> Some userid
@@ -307,7 +307,7 @@ let action_link_handler_common akey =
     else
       match action with
       | `Custom s ->
-        let%lwt existing_user = Os_db.User.get_email_validated userid email in
+        let%lwt existing_user = Os_user.is_email_validated userid email in
         Lwt.return (`Custom_action_link (action_link, not existing_user))
       | _ -> Lwt.return `Reload
 
@@ -376,7 +376,7 @@ let%server add_email_handler =
   let add_email userid () email =
     let%lwt available = Os_db.Email.available email in
     if available then
-      let%lwt () = Os_db.User.add_email_to_user ~userid ~email in
+      let%lwt () = Os_user.add_email_to_user ~userid ~email in
       send_act email userid
     else begin
       Eliom_reference.Volatile.set Os_userbox.user_already_exists true;
