@@ -64,13 +64,17 @@ $(LIBDIR):
 ##----------------------------------------------------------------------
 ## Server side compilation
 
+SERVER_CMI      := $(wildcard $(addsuffix /os_*.cmi,$(addprefix $(ELIOM_SERVER_DIR)/,$(SERVER_DIRS))))
+SERVER_CMX      := $(wildcard $(addsuffix /os_*.cmx,$(addprefix $(ELIOM_SERVER_DIR)/,$(SERVER_DIRS))))
+SERVER_CMO      := $(wildcard $(addsuffix /os_*.cmo,$(addprefix $(ELIOM_SERVER_DIR)/,$(SERVER_DIRS))))
+
 ## make it more elegant ?
 SERVER_DIRS     := $(shell echo $(foreach f, $(SERVER_FILES), $(dir $(f))) |  tr ' ' '\n' | sort -u | tr '\n' ' ')
 SERVER_DEP_DIRS := ${addprefix -eliom-inc ,${SERVER_DIRS}}
 SERVER_INC_DIRS := ${addprefix -I $(ELIOM_SERVER_DIR)/, ${SERVER_DIRS}}
 
-SERVER_INC  := ${addprefix -package ,${SERVER_PACKAGES}}
-SERVER_DB_INC  := ${addprefix -package ,${SERVER_DB_PACKAGES}}
+SERVER_INC      := ${addprefix -package ,${SERVER_PACKAGES}}
+SERVER_DB_INC   := ${addprefix -package ,${SERVER_DB_PACKAGES}}
 
 ${ELIOM_TYPE_DIR}/%.type_mli: %.eliom
 	${ELIOMC} -ppx -infer ${SERVER_INC} ${SERVER_INC_DIRS} $<
@@ -86,31 +90,31 @@ $(LIBDIR)/$(PKG_NAME).server.cmxa: $(call objs,$(ELIOM_SERVER_DIR),cmx,$(SERVER_
 %.cmxs: %.cmxa
 	$(ELIOMOPT) -ppx -shared -linkall -o $@ $(GENERATE_DEBUG) $<
 
-${ELIOM_SERVER_DIR}/%_db.cmi: %_db.mli
+${ELIOM_SERVER_DIR}/%_db.cmi: %_db.mli $(SERVER_CMI)
 	${ELIOMC} -c ${SERVER_DB_INC} ${SERVER_INC_DIRS} $(GENERATE_DEBUG) $<
-${ELIOM_SERVER_DIR}/%.cmi: %.mli
+${ELIOM_SERVER_DIR}/%.cmi: %.mli $(SERVER_CMI)
+	${ELIOMC} -ppx -c ${SERVER_INC} ${SERVER_INC_DIRS} $(GENERATE_DEBUG) $<
+${ELIOM_SERVER_DIR}/%.cmi: %.eliomi $(SERVER_CMI)
 	${ELIOMC} -ppx -c ${SERVER_INC} ${SERVER_INC_DIRS} $(GENERATE_DEBUG) $<
 
-${ELIOM_SERVER_DIR}/%.cmi: %.eliomi
-	${ELIOMC} -ppx -c ${SERVER_INC} ${SERVER_INC_DIRS} $(GENERATE_DEBUG) $<
-
-${ELIOM_SERVER_DIR}/%_db.cmo: %_db.ml
+${ELIOM_SERVER_DIR}/%_db.cmo: %_db.ml $(SERVER_CMO)
 	${ELIOMC} -c ${SERVER_DB_INC} ${SERVER_INC_DIRS} $(GENERATE_DEBUG) $<
-${ELIOM_SERVER_DIR}/%.cmo: %.ml
+${ELIOM_SERVER_DIR}/%.cmo: %.ml $(SERVER_CMO)
 	${ELIOMC} -ppx -c ${SERVER_INC} ${SERVER_INC_DIRS} $(GENERATE_DEBUG) $<
-${ELIOM_SERVER_DIR}/%.cmo: %.eliom
+${ELIOM_SERVER_DIR}/%.cmo: %.eliom $(SERVER_CMO)
 	${ELIOMC} -ppx -c ${SERVER_INC} ${SERVER_INC_DIRS} $(GENERATE_DEBUG) $<
 
-${ELIOM_SERVER_DIR}/%_db.cmx: %_db.ml
+${ELIOM_SERVER_DIR}/%_db.cmx: %_db.ml $(SERVER_CMI) $(SERVER_CMX)
 	${ELIOMOPT} -c ${SERVER_DB_INC} ${SERVER_INC_DIRS} $(GENERATE_DEBUG) $<
-${ELIOM_SERVER_DIR}/%.cmx: %.ml
+${ELIOM_SERVER_DIR}/%.cmx: %.ml $(SERVER_CMI) $(SERVER_FILES_CMX)
 	${ELIOMOPT} -ppx -c ${SERVER_INC} ${SERVER_INC_DIRS} $(GENERATE_DEBUG) $<
-${ELIOM_SERVER_DIR}/%.cmx: %.eliom
+${ELIOM_SERVER_DIR}/%.cmx: %.eliom $(SERVER_CMI) $(SERVER_CMX)
 	${ELIOMOPT} -ppx -c ${SERVER_INC} ${SERVER_INC_DIRS} $(GENERATE_DEBUG) $<
 
 
 ##----------------------------------------------------------------------
 ## Client side compilation
+
 
 ## make it more elegant ?
 CLIENT_DIRS     := $(shell echo $(foreach f, $(CLIENT_FILES), $(dir $(f))) |  tr ' ' '\n' | sort -u | tr '\n' ' ')
@@ -120,6 +124,7 @@ CLIENT_INC_DIRS := ${addprefix -I $(ELIOM_CLIENT_DIR)/,${CLIENT_DIRS}}
 CLIENT_LIBS := ${addprefix -package ,${CLIENT_PACKAGES}}
 CLIENT_INC  := ${addprefix -package ,${CLIENT_PACKAGES}}
 
+CLIENT_CMI=$(wildcard $(addsuffix /os_*.cmi,$(addprefix $(ELIOM_CLIENT_DIR)/,$(CLIENT_DIRS))))
 CLIENT_OBJS := $(filter %.eliom %.ml, $(CLIENT_FILES))
 CLIENT_OBJS := $(patsubst %.eliom,${ELIOM_CLIENT_DIR}/%.cmo, ${CLIENT_OBJS})
 CLIENT_OBJS := $(patsubst %.ml,${ELIOM_CLIENT_DIR}/%.cmo, ${CLIENT_OBJS})
@@ -128,15 +133,14 @@ $(LIBDIR)/$(PKG_NAME).client.cma: $(call objs,$(ELIOM_CLIENT_DIR),cmo,$(CLIENT_F
 	${JS_OF_ELIOM} -a -o $@ $(GENERATE_DEBUG) \
           $(call depsort,$(ELIOM_CLIENT_DIR),cmo,-client,$(CLIENT_INC),$(CLIENT_FILES))
 
-${ELIOM_CLIENT_DIR}/%.cmi: %.mli
+${ELIOM_CLIENT_DIR}/%.cmi: %.mli $(CLIENT_CMI)
+	${JS_OF_ELIOM} -c ${CLIENT_INC} ${CLIENT_INC_DIRS} $(GENERATE_DEBUG) $<
+${ELIOM_CLIENT_DIR}/%.cmi: %.eliomi $(CLIENT_CMI)
 	${JS_OF_ELIOM} -c ${CLIENT_INC} ${CLIENT_INC_DIRS} $(GENERATE_DEBUG) $<
 
-${ELIOM_CLIENT_DIR}/%.cmo: %.eliom
+${ELIOM_CLIENT_DIR}/%.cmo: %.eliom $(CLIENT_CMI) $(CLIENT_OBJS)
 	${JS_OF_ELIOM} -c ${CLIENT_INC} ${CLIENT_INC_DIRS} $(GENERATE_DEBUG) $<
-${ELIOM_CLIENT_DIR}/%.cmo: %.ml
-	${JS_OF_ELIOM} -c ${CLIENT_INC} ${CLIENT_INC_DIRS} $(GENERATE_DEBUG) $<
-
-${ELIOM_CLIENT_DIR}/%.cmi: %.eliomi
+${ELIOM_CLIENT_DIR}/%.cmo: %.ml $(CLIENT_CMI) $(CLIENT_OBJS)
 	${JS_OF_ELIOM} -c ${CLIENT_INC} ${CLIENT_INC_DIRS} $(GENERATE_DEBUG) $<
 
 ##----------------------------------------------------------------------
@@ -156,9 +160,6 @@ META: META.in
 		-e 's#@@SERVER_ARCHIVES_NATIVE_PLUGIN@@#$(PKG_NAME).server.cmxs#g' \
 		$< > $@
 
-CLIENT_CMI=$(wildcard $(addsuffix /os_*.cmi,$(addprefix $(ELIOM_CLIENT_DIR)/,$(CLIENT_DIRS))))
-SERVER_CMI=$(wildcard $(addsuffix /os_*.cmi,$(addprefix $(ELIOM_SERVER_DIR)/,$(SERVER_DIRS))))
-SERVER_CMX=$(wildcard $(addsuffix /os_*.cmx,$(addprefix $(ELIOM_SERVER_DIR)/,$(SERVER_DIRS))))
 install: all META
 	$(OCAMLFIND) install $(PKG_NAME) META
 	mkdir -p $(OCAMLFIND_DESTDIR)/$(PKG_NAME)/client
