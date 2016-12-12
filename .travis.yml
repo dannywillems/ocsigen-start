@@ -5,9 +5,9 @@ before_install:
 install: wget https://raw.githubusercontent.com/ocaml/ocaml-ci-scripts/master/.travis-opam.sh
 script: bash -ex .travis-opam.sh
 env:
-  - OCAML_VERSION=4.02 PINS="ocsigenserver:https://github.com/ocsigen/ocsigenserver.git reactiveData:https://github.com/ocsigen/reactiveData.git eliom:https://github.com/ocsigen/eliom.git ocsigen-toolkit:https://github.com/ocsigen/ocsigen-toolkit.git" PACKAGE=ocsigen-start
-  - OCAML_VERSION=4.03 PINS="ocsigenserver:https://github.com/ocsigen/ocsigenserver.git reactiveData:https://github.com/ocsigen/reactiveData.git eliom:https://github.com/ocsigen/eliom.git ocsigen-toolkit:https://github.com/ocsigen/ocsigen-toolkit.git" PACKAGE=ocsigen-start
-  - OCAML_VERSION=4.04 PINS="ocsigenserver:https://github.com/ocsigen/ocsigenserver.git reactiveData:https://github.com/ocsigen/reactiveData.git eliom:https://github.com/ocsigen/eliom.git ocsigen-toolkit:https://github.com/ocsigen/ocsigen-toolkit.git" PACKAGE=ocsigen-start
+  - OCAML_VERSION=4.02 PINS="eliom:https://github.com/ocsigen/eliom.git" PACKAGE=ocsigen-start POST_INSTALL_HOOK="cd ; eliom-distillery -y -name test -template os.pgocaml ; cd test ; make db-init ; make db-create ; make db-schema ; make test.byte"
+  - OCAML_VERSION=4.03 PINS="eliom:https://github.com/ocsigen/eliom.git" PACKAGE=ocsigen-start POST_INSTALL_HOOK="cd ; eliom-distillery -y -name test -template os.pgocaml ; cd test ; make db-init ; make db-create ; make db-schema ; make test.byte"
+  - OCAML_VERSION=4.04 PINS="eliom:https://github.com/ocsigen/eliom.git" PACKAGE=ocsigen-start POST_INSTALL_HOOK="cd ; eliom-distillery -y -name test -template os.pgocaml ; cd test ; make db-init ; make db-create ; make db-schema ; make test.byte"
 os:
   - linux
   - osx
