@@ -13,17 +13,6 @@
 
 [%%shared.start]
 
-(** [language_of_string lang_str] returns the equivalent language to [lang_str]
-    as a {!%%%MODULE_NAME_i18n.language} type. If the language is not found, it
-    raises a {!Not_found} exception.
- *)
-val language_of_string : string -> %%%MODULE_NAME%%%_i18n.t
-
-(** [string_of_language lang] returns the equivalent language to [lang] as a
-    string.
- *)
-val string_of_language : %%%MODULE_NAME%%%_i18n.t -> string
-
 (** [get_language ()] returns the language for the current user.
     It retrieves the language from the file %%%PROJECT_NAME%%%_i18n, not from
     the database.
