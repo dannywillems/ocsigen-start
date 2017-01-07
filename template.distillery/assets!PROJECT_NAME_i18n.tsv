@@ -124,3 +124,4 @@ allows_get_information_currently_connected_user	allows to get information about 
 these_functions_called_server_or_client_side	These functions can be called either from server or client-side.	Ces fonctions peuvent être appelées aussi bien coté client que coté serveur.
 always_get_current_user_using_module	Always get the current user id using module	Récupérez toujours l'ID de l'utilisateur courant en utilisant le module
 never_trust_client_pending_user_id	Never trust a client sending its own user id!	Ne faites jamais confiance à un client envoyant son propre ID utilisateur !
+change_language	Change language	Changer la langue

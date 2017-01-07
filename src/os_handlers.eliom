@@ -210,7 +210,7 @@ let%client restart ?url () =
 (* By default, disconnect_handler stays on the same page.
    If [main_page] is true, it goes to the main page.
 *)
-let disconnect_handler ?(main_page = false) () () =
+let%server disconnect_handler ?(main_page = false) () () =
   (* SECURITY: no check here because we disconnect the session cookie owner. *)
   let%lwt () = Os_session.disconnect () in
   ignore [%client (restart
@@ -237,7 +237,7 @@ let%client disconnect_handler ?(main_page = false) () () =
   disconnect_handler_rpc main_page
 
 (* Connection *)
-let connect_handler () ((login, pwd), keepmeloggedin) =
+let%server connect_handler () ((login, pwd), keepmeloggedin) =
   (* SECURITY: no check here. *)
   try%lwt
     let%lwt userid = Os_user.verify_password login pwd in
@@ -278,7 +278,7 @@ let%client connect_handler () v = connect_handler_rpc v
   exception No_such_resource
 ]
 
-let action_link_handler_common akey =
+let%server action_link_handler_common akey =
   let myid_o = Os_current_user.Opt.get_current_userid () in
   try%lwt
     let open Os_types.Action_link_key in
@@ -344,6 +344,7 @@ let%client restart_if_client_side () =
   restart ~url:(make_uri
                   ~absolute:true
                   ~service:Eliom_service.reload_action ()) ()
+
 let%server restart_if_client_side () = ()
 
 let%shared action_link_handler _myid_o akey () =
@@ -366,9 +367,11 @@ let%shared action_link_handler _myid_o akey () =
   | `Account_already_activated_unconnected (action_link) ->
     Lwt.fail (Account_already_activated_unconnected (action_link))
 
+let%shared update_language_handler () language =
+  Os_current_user.update_language language
 
 (* Preregister *)
-let preregister_handler () email =
+let%server preregister_handler () email =
   let%lwt is_preregistered = Os_user.is_preregistered email in
   let%lwt is_registered = Os_user.is_registered email in
   Printf.printf "%b:%b%!\n" is_preregistered is_registered;
